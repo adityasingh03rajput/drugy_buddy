@@ -3,3 +3,4 @@ tensorflow
 pubchempy
 numpy
 pillow
+kaggle
