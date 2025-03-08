@@ -39,6 +39,21 @@ st.title("🔬 Drug Detection AI using Microscopic Images")
 # Upload Image
 uploaded_file = st.file_uploader("📤 Upload a microscopic image", type=["jpg", "png", "jpeg"])
 
+# Test Form for Scientist Input
+with st.form("scientist_input_form"):
+    st.write("🔬 Please fill out the following details to help with drug detection:")
+    drug_name = st.text_input("Drug Name")
+    drug_type = st.selectbox("Drug Type", ["Analgesic", "Antibiotic", "Antiviral", "Antifungal", "Other"])
+    color = st.color_picker("Color of the Drug")
+    solubility = st.selectbox("Solubility", ["Water Soluble", "Fat Soluble", "Insoluble"])
+    submitted = st.form_submit_button("Submit Information")
+
+    if submitted:
+        st.write(f"Drug Name: {drug_name}")
+        st.write(f"Drug Type: {drug_type}")
+        st.write(f"Color: {color}")
+        st.write(f"Solubility: {solubility}")
+
 if uploaded_file is not None:
     # Display Uploaded Image
     user_image = Image.open(uploaded_file).convert("RGB")
