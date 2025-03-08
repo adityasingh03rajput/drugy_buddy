@@ -6,10 +6,15 @@ from PIL import Image
 import timm
 from io import BytesIO
 
-# Load pre-trained model (EfficientNet)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = timm.create_model("efficientnet_b3", pretrained=True, num_classes=1000)
-model.eval().to(device)
+# Load pre-trained model (EfficientNet) with caching
+@st.cache_resource  # Cache the model to avoid reloading on every interaction
+def load_model():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = timm.create_model("efficientnet_b3", pretrained=True, num_classes=1000)
+    model.eval().to(device)
+    return model, device
+
+model, device = load_model()
 
 # Image transformation for model input
 transform = transforms.Compose([
@@ -26,6 +31,7 @@ def classify_image(image):
     return output.argmax().item()
 
 # Function to fetch drug images from PubChem
+@st.cache_data  # Cache API responses to avoid repeated calls
 def fetch_pubchem_image(drug_name):
     url = f"https://pubchem.ncbi.nlm.nih.gov/image/imgsrv.fcgi?cid={drug_name}&t=l"
     response = requests.get(url)
@@ -39,44 +45,33 @@ st.title("🔬 Drug Detection AI using Microscopic Images")
 # Upload Image
 uploaded_file = st.file_uploader("📤 Upload a microscopic image", type=["jpg", "png", "jpeg"])
 
-# Test Form for Scientist Input
-with st.form("scientist_input_form"):
-    st.write("🔬 Please fill out the following details to help with drug detection:")
-    drug_name = st.text_input("Drug Name")
-    drug_type = st.selectbox("Drug Type", ["Analgesic", "Antibiotic", "Antiviral", "Antifungal", "Other"])
-    color = st.color_picker("Color of the Drug")
-    solubility = st.selectbox("Solubility", ["Water Soluble", "Fat Soluble", "Insoluble"])
-    submitted = st.form_submit_button("Submit Information")
-
-    if submitted:
-        st.write(f"Drug Name: {drug_name}")
-        st.write(f"Drug Type: {drug_type}")
-        st.write(f"Color: {color}")
-        st.write(f"Solubility: {solubility}")
+# Placeholder for real-time output
+output_placeholder = st.empty()
 
 if uploaded_file is not None:
     # Display Uploaded Image
     user_image = Image.open(uploaded_file).convert("RGB")
     st.image(user_image, caption="Uploaded Microscopic Image", use_column_width=True)
 
-    # Process Uploaded Image
-    st.write("⏳ Processing Image...")
-    user_prediction = classify_image(user_image)
+    # Process Uploaded Image in real-time
+    with st.spinner("⏳ Processing Image..."):
+        user_prediction = classify_image(user_image)
+        output_placeholder.write(f"🔍 Predicted Class: {user_prediction}")
 
     # Try matching with known drug images
-    st.write("🔍 Searching online databases for a match...")
-    drug_names = ["Aspirin", "Ibuprofen", "Paracetamol", "Morphine"]  # Example drug list
+    with st.spinner("🔍 Searching online databases for a match..."):
+        drug_names = ["Aspirin", "Ibuprofen", "Paracetamol", "Morphine"]  # Example drug list
+        found_match = False
 
-    found_match = False
-    for drug in drug_names:
-        online_image = fetch_pubchem_image(drug)
-        if online_image:
-            online_prediction = classify_image(online_image)
-            if user_prediction == online_prediction:
-                st.success(f"✅ Drug Detected: **{drug}**")
-                st.image(online_image, caption=f"Matched with: {drug}", use_column_width=True)
-                found_match = True
-                break
+        for drug in drug_names:
+            online_image = fetch_pubchem_image(drug)
+            if online_image:
+                online_prediction = classify_image(online_image)
+                if user_prediction == online_prediction:
+                    output_placeholder.success(f"✅ Drug Detected: **{drug}**")
+                    st.image(online_image, caption=f"Matched with: {drug}", use_column_width=True)
+                    found_match = True
+                    break
 
-    if not found_match:
-        st.warning("❌ No known drug detected in the image.")
+        if not found_match:
+            output_placeholder.warning("❌ No known drug detected in the image.")
