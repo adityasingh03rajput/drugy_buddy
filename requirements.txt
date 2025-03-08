@@ -1,8 +1,5 @@
-streamlit  
-torch  
-torchvision  
-timm  
-pillow  
-numpy 
-requests
+streamlit
+tensorflow
 pubchempy
+numpy
+pillow
