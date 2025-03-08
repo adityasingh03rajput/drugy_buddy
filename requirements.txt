@@ -4,3 +4,5 @@ torchvision
 timm  
 pillow  
 numpy 
+requests
+pubchempy
