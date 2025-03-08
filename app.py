@@ -5,9 +5,11 @@ import torchvision.transforms as transforms
 from PIL import Image
 import timm
 from io import BytesIO
+import pubchempy as pcp  # For fetching molecular data
+import numpy as np
 
 # Load pre-trained model (EfficientNet) with caching
-@st.cache_resource  # Cache the model to avoid reloading on every interaction
+@st.cache_resource
 def load_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = timm.create_model("efficientnet_b3", pretrained=True, num_classes=1000)
@@ -30,8 +32,25 @@ def classify_image(image):
         output = model(img)
     return output.argmax().item()
 
+# Function to fetch molecular data from PubChem
+def fetch_molecular_data(drug_name):
+    try:
+        compounds = pcp.get_compounds(drug_name, 'name')
+        if compounds:
+            compound = compounds[0]
+            return {
+                "name": compound.iupac_name,
+                "formula": compound.molecular_formula,
+                "weight": compound.molecular_weight,
+                "smiles": compound.canonical_smiles,
+                "image_url": f"https://pubchem.ncbi.nlm.nih.gov/image/imgsrv.fcgi?cid={compound.cid}&t=l"
+            }
+    except Exception as e:
+        st.error(f"Error fetching molecular data: {e}")
+    return None
+
 # Function to fetch drug images from PubChem
-@st.cache_data  # Cache API responses to avoid repeated calls
+@st.cache_data
 def fetch_pubchem_image(drug_name):
     url = f"https://pubchem.ncbi.nlm.nih.gov/image/imgsrv.fcgi?cid={drug_name}&t=l"
     response = requests.get(url)
@@ -40,7 +59,22 @@ def fetch_pubchem_image(drug_name):
     return None
 
 # Streamlit App UI
-st.title("🔬 Drug Detection AI using Microscopic Images")
+st.title("🔬 Advanced Drug Detection AI using Microscopic Images")
+
+# Test Form for Scientist Input
+with st.form("scientist_input_form"):
+    st.write("🔬 Please fill out the following details to help with drug detection:")
+    drug_name = st.text_input("Drug Name (e.g., Aspirin, Water)")
+    drug_type = st.selectbox("Drug Type", ["Analgesic", "Antibiotic", "Antiviral", "Antifungal", "Other"])
+    color = st.color_picker("Color of the Drug")
+    solubility = st.selectbox("Solubility", ["Water Soluble", "Fat Soluble", "Insoluble"])
+    submitted = st.form_submit_button("Submit Information")
+
+    if submitted:
+        st.write(f"Drug Name: {drug_name}")
+        st.write(f"Drug Type: {drug_type}")
+        st.write(f"Color: {color}")
+        st.write(f"Solubility: {solubility}")
 
 # Upload Image
 uploaded_file = st.file_uploader("📤 Upload a microscopic image", type=["jpg", "png", "jpeg"])
@@ -58,9 +92,25 @@ if uploaded_file is not None:
         user_prediction = classify_image(user_image)
         output_placeholder.write(f"🔍 Predicted Class: {user_prediction}")
 
+    # Fetch molecular data based on the test form input
+    if submitted and drug_name:
+        with st.spinner("🔍 Fetching molecular data..."):
+            molecular_data = fetch_molecular_data(drug_name)
+            if molecular_data:
+                st.write("📊 Molecular Data:")
+                st.write(f"Name: {molecular_data['name']}")
+                st.write(f"Formula: {molecular_data['formula']}")
+                st.write(f"Weight: {molecular_data['weight']}")
+                st.write(f"SMILES: {molecular_data['smiles']}")
+
+                # Display molecular image
+                molecular_image = fetch_pubchem_image(molecular_data['name'])
+                if molecular_image:
+                    st.image(molecular_image, caption=f"Molecular Structure: {molecular_data['name']}", use_column_width=True)
+
     # Try matching with known drug images
     with st.spinner("🔍 Searching online databases for a match..."):
-        drug_names = ["Aspirin", "Ibuprofen", "Paracetamol", "Morphine"]  # Example drug list
+        drug_names = ["Aspirin", "Ibuprofen", "Paracetamol", "Morphine", "Water"]  # Example drug list
         found_match = False
 
         for drug in drug_names:
