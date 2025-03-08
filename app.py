@@ -4,12 +4,22 @@ import numpy as np
 import pubchempy as pcp
 from PIL import Image
 import os
+import zipfile
+import kaggle
 
 # Streamlit app
 st.title("Drug Detection Machine")
 st.write("Upload a microscopic image to analyze or search for a drug by name.")
 
-# Load a pretrained model (ResNet50 or EfficientNetV2)
+# Download Kaggle dataset
+def download_kaggle_dataset():
+    if not os.path.exists("data/drugs"):
+        os.makedirs("data/drugs", exist_ok=True)
+        kaggle.api.authenticate()
+        kaggle.api.dataset_download_files("username/drug-classification-dataset", path="data", unzip=True)
+        st.success("Kaggle dataset downloaded successfully!")
+
+# Load a pretrained model (ResNet50)
 def load_model():
     model = tf.keras.applications.ResNet50(
         weights="imagenet", include_top=False, pooling="avg"
@@ -59,6 +69,9 @@ if drug_name:
         st.sidebar.write(f"Molecular Formula: {compound.molecular_formula}")
     else:
         st.sidebar.error("No matching drug found.")
+
+# Download Kaggle dataset
+download_kaggle_dataset()
 
 # File uploader for image analysis
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
