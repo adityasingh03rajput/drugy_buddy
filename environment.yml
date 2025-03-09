@@ -1,0 +1,9 @@
+name: drug-discovery-env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - rdkit-pypi
+  - pandas
+  - streamlit
+  - requests
