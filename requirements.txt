@@ -1,4 +1,4 @@
-tkinter
+PyQt5
 requests
 pandas
 matplotlib
