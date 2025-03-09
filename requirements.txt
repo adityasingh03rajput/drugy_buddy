@@ -1,6 +1,6 @@
-tkinter>=8.6
-requests>=2.26.0
-pandas>=1.3.0
-matplotlib>=3.4.0
-kaggle>=1.5.0
-openai>=0.27.0
+tkinter
+requests
+pandas
+matplotlib
+kaggle
+openai
