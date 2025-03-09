@@ -1,9 +1,9 @@
-# Drug Detection Machine
+# libGL.so.1 Installer Script
 
-## Overview
-This program analyzes microscopic images to detect drugs and identify their molecular structure using a pretrained deep learning model (ResNet50) and PubChem. It also integrates a Kaggle dataset for drug images.
+This script automatically installs the `libGL.so.1` library on Linux systems. It supports Ubuntu/Debian, Fedora/RHEL, and Arch Linux.
 
-## Setup
-1. Install dependencies:
+## How to Use
+
+1. Download the script:
    ```bash
-   pip install -r requirements.txt
+   wget https://raw.githubusercontent.com/yourusername/libgl-installer/main/install_libgl.sh
