@@ -1,21 +1,35 @@
-import streamlit as at
-import sys
-import turtle
+import streamlit as st
+import os
 import requests
 import pandas as pd
-import matplotlib.pyplot as plt
-import os
-from config import KAGGLE_USERNAME, KAGGLE_KEY, OPENAI_API_KEY
+import turtle
 
-# ✅ Correctly setting environment variables
-os.environ["KAGGLE_USERNAME"] = KAGGLE_USERNAME
-os.environ["KAGGLE_KEY"] = KAGGLE_KEY
+# Kaggle API setup
+os.environ['KAGGLE_USERNAME'] = 'adityasingh03rajput'
+os.environ['KAGGLE_KEY'] = 'd1423178b21e3f6e2ffa3b782bfd1684'
 
-# ✅ Function to analyze drug requirement
+# OpenAI API key
+OPENAI_API_KEY = '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'
+
+# Streamlit UI for input
+st.title("Drug Discovery Lite")
+
+requirement = st.text_input("Enter Drug Requirement:")
+if st.button("Submit"):
+    if not requirement:
+        st.error("Please enter a requirement.")
+    else:
+        try:
+            result = analyze_requirement(requirement)
+            st.success(result)
+        except Exception as e:
+            st.error(str(e))
+
+# Function to analyze drug requirement
 def analyze_requirement(requirement):
-    # Step 1: Fetch data from Kaggle
+    # Step 1: Fetch data from Kaggle (example)
     data = fetch_kaggle_data()
-    print("Fetched data:", data.head())
+    st.write("Fetched data:", data.head())
 
     # Step 2: Use OpenAI API to analyze requirement
     response = requests.post(
@@ -30,26 +44,22 @@ def analyze_requirement(requirement):
         raise Exception("Failed to analyze requirement.")
 
     analysis = response.json()["choices"][0]["message"]["content"]
-    print("Analysis:", analysis)
+    st.write("Analysis:", analysis)
 
     # Step 3: Draw molecular structure using Turtle
     draw_molecular_structure()
 
     return f"Analysis complete. Suggested structure for: {requirement}"
 
-# ✅ Function to fetch data from Kaggle
+# Function to fetch data from Kaggle
 def fetch_kaggle_data():
     from kaggle.api.kaggle_api_extended import KaggleApi
     api = KaggleApi()
     api.authenticate()
-    
-    # 🔹 Replace this with a real dataset name from Kaggle
-    dataset_name = "zillow/zecon"  # Example dataset
-    api.dataset_download_files(dataset_name, path="./data", unzip=True)
-    
+    api.dataset_download_files("username/dataset-name", path="./data", unzip=True)
     return pd.read_csv("./data/example_dataset.csv")
 
-# ✅ Function to draw a molecular structure using Turtle
+# Function to draw a molecular structure using Turtle
 def draw_molecular_structure():
     screen = turtle.Screen()
     screen.title("Molecular Structure")
@@ -79,20 +89,4 @@ def draw_molecular_structure():
     pen.pendown()
     pen.circle(10)  # Small branch
 
-    # Close window after 5 seconds
-    screen.ontimer(lambda: screen.bye(), 5000)
     screen.mainloop()
-
-# ✅ Streamlit UI for input
-at.title("Drug Discovery Lite")
-
-requirement = at.text_input("Enter Drug Requirement:")
-if at.button("Submit"):
-    if not requirement:
-        at.error("Please enter a requirement.")
-    else:
-        try:
-            result = analyze_requirement(requirement)
-            at.success(result)
-        except Exception as e:
-            at.error(str(e))
