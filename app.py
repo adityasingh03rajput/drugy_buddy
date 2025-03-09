@@ -1,21 +1,21 @@
-import streamlit as at
-import sys
-import turtle
+import streamlit as st
+import os
 import requests
 import pandas as pd
-import matplotlib.pyplot as plt
-import os
-from config import KAGGLE_USERNAME, KAGGLE_KEY, OPENAI_API_KEY
+import turtle
 
-# ✅ Correctly setting environment variables
-os.environ["KAGGLE_USERNAME"] = KAGGLE_USERNAME
-os.environ["KAGGLE_KEY"] = KAGGLE_KEY
+# ✅ Set Kaggle API credentials
+os.environ["KAGGLE_USERNAME"] = "adityasingh03rajput"
+os.environ["KAGGLE_KEY"] = "d1423178b21e3f6e2ffa3b782bfd1684"
+
+# ✅ Set OpenAI API key
+OPENAI_API_KEY = "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"
 
 # ✅ Function to analyze drug requirement
 def analyze_requirement(requirement):
     # Step 1: Fetch data from Kaggle
     data = fetch_kaggle_data()
-    print("Fetched data:", data.head())
+    st.write("Fetched data:", data.head())
 
     # Step 2: Use OpenAI API to analyze requirement
     response = requests.post(
@@ -30,7 +30,7 @@ def analyze_requirement(requirement):
         raise Exception("Failed to analyze requirement.")
 
     analysis = response.json()["choices"][0]["message"]["content"]
-    print("Analysis:", analysis)
+    st.write("Analysis:", analysis)
 
     # Step 3: Draw molecular structure using Turtle
     draw_molecular_structure()
@@ -84,15 +84,15 @@ def draw_molecular_structure():
     screen.mainloop()
 
 # ✅ Streamlit UI for input
-at.title("Drug Discovery Lite")
+st.title("Drug Discovery Lite")
 
-requirement = at.text_input("Enter Drug Requirement:")
-if at.button("Submit"):
+requirement = st.text_input("Enter Drug Requirement:")
+if st.button("Submit"):
     if not requirement:
-        at.error("Please enter a requirement.")
+        st.error("Please enter a requirement.")
     else:
         try:
             result = analyze_requirement(requirement)
-            at.success(result)
+            st.success(result)
         except Exception as e:
-            at.error(str(e))
+            st.error(str(e))
