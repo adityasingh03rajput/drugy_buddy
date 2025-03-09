@@ -1,6 +1,12 @@
 streamlit
-tensorflow
+rdkit
+deepchem
 pubchempy
+pandas
 numpy
-pillow
-kaggle
+Pillow
+tensorflow
+matplotlib
+seaborn
+plotly
+scikit-learn
