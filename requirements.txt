@@ -1,8 +1,5 @@
 streamlit
-PyQt5
 requests
 pandas
 matplotlib
 kaggle
-openai
-turtle
