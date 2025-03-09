@@ -1,3 +1,4 @@
+streamlit
 PyQt5
 requests
 pandas
