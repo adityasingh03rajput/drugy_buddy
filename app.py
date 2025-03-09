@@ -43,11 +43,12 @@ def fetch_kaggle_data():
     api = KaggleApi()
     api.authenticate()
     
-    # 🔹 Replace this with a real dataset name from Kaggle
-    dataset_name = "zillow/zecon"  # Example dataset
+    # 🔹 Replace with a drug-related dataset from Kaggle
+    dataset_name = "prathamtripathi/drug-classification"  # Example drug dataset
     api.dataset_download_files(dataset_name, path="./data", unzip=True)
     
-    return pd.read_csv("./data/example_dataset.csv")
+    # 🔹 Load the dataset (replace "drug200.csv" with the actual file name)
+    return pd.read_csv("./data/drug200.csv")
 
 # ✅ Function to draw a molecular structure using Turtle
 def draw_molecular_structure():
