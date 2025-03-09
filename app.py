@@ -1,5 +1,6 @@
-import tkinter as tk
-from tkinter import messagebox
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox
+from PyQt5.QtCore import Qt
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,77 +11,90 @@ import os
 os.environ['KAGGLE_USERNAME'] = KAGGLE_USERNAME
 os.environ['KAGGLE_KEY'] = KAGGLE_KEY
 
-# GUI Setup
-def create_gui():
-    root = tk.Tk()
-    root.title("Drug Discovery Lite")
+# Main Application Window
+class DrugDiscoveryApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.init_ui()
 
-    # Input field for drug requirement
-    tk.Label(root, text="Enter Drug Requirement:").pack()
-    entry = tk.Entry(root, width=50)
-    entry.pack()
+    def init_ui(self):
+        # Set up the layout
+        layout = QVBoxLayout()
 
-    # Button to trigger analysis
-    def on_submit():
-        requirement = entry.get()
+        # Input field for drug requirement
+        self.label = QLabel("Enter Drug Requirement:")
+        layout.addWidget(self.label)
+
+        self.entry = QLineEdit()
+        layout.addWidget(self.entry)
+
+        # Button to trigger analysis
+        self.button = QPushButton("Submit")
+        self.button.clicked.connect(self.on_submit)
+        layout.addWidget(self.button)
+
+        # Set the layout to the window
+        self.setLayout(layout)
+        self.setWindowTitle("Drug Discovery Lite")
+        self.setGeometry(300, 300, 400, 200)
+
+    def on_submit(self):
+        requirement = self.entry.text()
         if not requirement:
-            messagebox.showerror("Error", "Please enter a requirement.")
+            QMessageBox.critical(self, "Error", "Please enter a requirement.")
             return
 
         # Fetch data and generate structure
         try:
-            result = analyze_requirement(requirement)
-            messagebox.showinfo("Result", result)
+            result = self.analyze_requirement(requirement)
+            QMessageBox.information(self, "Result", result)
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            QMessageBox.critical(self, "Error", str(e))
 
-    tk.Button(root, text="Submit", command=on_submit).pack()
+    def analyze_requirement(self, requirement):
+        # Step 1: Fetch data from Kaggle (example)
+        data = self.fetch_kaggle_data()
+        print("Fetched data:", data.head())
 
-    root.mainloop()
+        # Step 2: Use OpenAI API to analyze requirement
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {OPENAI_API_KEY}"},
+            json={
+                "model": "gpt-3.5-turbo",
+                "messages": [{"role": "user", "content": f"Analyze this drug requirement: {requirement}"}]
+            }
+        )
+        if response.status_code != 200:
+            raise Exception("Failed to analyze requirement.")
 
-# Analyze requirement and generate structure
-def analyze_requirement(requirement):
-    # Step 1: Fetch data from Kaggle (example)
-    data = fetch_kaggle_data()
-    print("Fetched data:", data.head())
+        analysis = response.json()["choices"][0]["message"]["content"]
+        print("Analysis:", analysis)
 
-    # Step 2: Use OpenAI API to analyze requirement
-    response = requests.post(
-        "https://api.openai.com/v1/chat/completions",
-        headers={"Authorization": f"Bearer {OPENAI_API_KEY}"},
-        json={
-            "model": "gpt-3.5-turbo",
-            "messages": [{"role": "user", "content": f"Analyze this drug requirement: {requirement}"}]
-        }
-    )
-    if response.status_code != 200:
-        raise Exception("Failed to analyze requirement.")
+        # Step 3: Generate and draw molecular structure (example)
+        self.draw_molecular_structure()
 
-    analysis = response.json()["choices"][0]["message"]["content"]
-    print("Analysis:", analysis)
+        return f"Analysis complete. Suggested structure for: {requirement}"
 
-    # Step 3: Generate and draw molecular structure (example)
-    draw_molecular_structure()
+    def fetch_kaggle_data(self):
+        # Use Kaggle API to fetch dataset (example)
+        # Replace with actual Kaggle API integration
+        from kaggle.api.kaggle_api_extended import KaggleApi
+        api = KaggleApi()
+        api.authenticate()
+        api.dataset_download_files("username/dataset-name", path="./data", unzip=True)
+        return pd.read_csv("./data/example_dataset.csv")
 
-    return f"Analysis complete. Suggested structure for: {requirement}"
+    def draw_molecular_structure(self):
+        # Example: Draw a simple structure using Matplotlib
+        fig, ax = plt.subplots()
+        ax.text(0.5, 0.5, "C9H8O4", fontsize=12, ha="center")  # Example: Aspirin formula
+        ax.axis("off")
+        plt.show()
 
-# Fetch data from Kaggle (example)
-def fetch_kaggle_data():
-    # Use Kaggle API to fetch dataset (example)
-    # Replace with actual Kaggle API integration
-    from kaggle.api.kaggle_api_extended import KaggleApi
-    api = KaggleApi()
-    api.authenticate()
-    api.dataset_download_files("username/dataset-name", path="./data", unzip=True)
-    return pd.read_csv("./data/example_dataset.csv")
-
-# Draw molecular structure (example)
-def draw_molecular_structure():
-    # Example: Draw a simple structure using Matplotlib
-    fig, ax = plt.subplots()
-    ax.text(0.5, 0.5, "C9H8O4", fontsize=12, ha="center")  # Example: Aspirin formula
-    ax.axis("off")
-    plt.show()
-
+# Run the application
 if __name__ == "__main__":
-    create_gui()
+    app = QApplication(sys.argv)
+    window = DrugDiscoveryApp()
+    window.show()
+    sys.exit(app.exec_())
