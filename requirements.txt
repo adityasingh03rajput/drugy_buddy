@@ -1,13 +1,3 @@
 streamlit
 rdkit
-deepchem
-pubchempy
-pandas
-numpy
 Pillow
-tensorflow
-matplotlib
-seaborn
-plotly
-scikit-learn
-libXrender
